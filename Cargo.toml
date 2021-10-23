@@ -1,0 +1,14 @@
+[package]
+name = "foebot"
+version = "0.1.0"
+authors = ["Alex"]
+edition = "2018"
+
+[dependencies]
+chrono = "0.4.11"
+rustls = "0.17.0"
+webpki = "0.21.3"
+webpki-roots = "0.20.0"
+rpassword = "4.0.5"
+serde_json = "1.0.60"
+nalgebra = "0.28.0"

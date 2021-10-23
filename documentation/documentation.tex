@@ -1,0 +1,88 @@
+\documentclass[11pt]{article}
+
+% This is a comment to let you leave notes for yourself...
+
+\usepackage{graphicx}			% package to include pdf graphics
+\usepackage{fancyhdr}			% gives headers see below
+\usepackage{geometry}			% package to give easy control of paper and margin size
+\geometry{a4paper}
+\usepackage{amsmath}			% packages to give lots of maths stuff
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+
+% Headers...
+\pagestyle{fancy}
+\lhead{Documentation - Project FOEbot}
+\chead{}
+\rhead{Alex Greig}
+\lfoot{}
+\cfoot{\thepage}
+\rfoot{}
+
+% Title page info...
+\title{Documentation - Project FOEbot}
+\author{Alex Greig}
+\date{\today}                                          
+
+% Start document...
+\begin{document}
+\maketitle
+
+% Table of contents...
+\tableofcontents
+
+\vspace{6cm}
+% Adding sections...
+\section{References / Websites}
+Currently, I am trying to build a pairs trading algorithm for stocks that I can trade. I am hoping to target illiquid stocks since I hope I might have some edge there as a small player, but the data looks hard to find, so I will test on liquids for now. Currently, there are X stages to it and I will walk you through the plan.
+
+1: Data - So far I have gotten 10 years of 1-minute data to work with for 378 S\&P500 stocks, but for practical purposes, I have decided to use 5-minute bars because Jupyter uses about 6GB of RAM when I open with 5-minute bars. Fundamental data as well as news data to be incorporated later. Hopefully, I can use some volatility risk premium and implied correlation data to backtest over different regime periods.
+
+2: Dimensionality Reduction - I am currently using PCA (Simio Moraes all credit due) to compress the time series for my stock returns and the silhouette coefficient to optimize the number of principal components. I am working on testing different methods including Karhunen-Loeve, T-SNE, RBFs, Wavelets, Kalman, and Whitney reduction networks. So far I've completed Kalman and Shumway Stoffer, as well as some Fourier and wavelet, transforms (wavelets are WIP kinda)
+
+3: Clustering - Again taken from Simio, I will be using OPTICS to cluster the stocks using the reduced time series to combat the curse of dimensionality. Within these clusters, I will then run my tests. I don't have that many stocks so I am going to use a combination of grouping by industry, OPTICS, DBSCAN (performed slightly better than OPTICS, but could be overfitting since you have to manually specify the cluster size), and finally "similar stocks" which came with my data as metadata.
+
+4: Testing - Simio references using ARODs (Absolute Rules Of Disqualification) which has 4 tests that must be passed, but I would like to create larger pairs (and need to do something original XD) so I have implemented a Box-Tiao canonical decomposition as a measure of mean reversion strength. It assumes assets follow a VAR(1) process and lets us try to minimize the predictability. If it has high predictability there will be trends that I don't want, but if it has low predictability it will just be white noise. I have attached a reference of the Hudson and Thames video going into detail. Paper H\&T video is based on is also referenced at the bottom. Exponential OU (Ornstein Uhlenbeck) also looks to be a promising model and I will continue to test it out. (Following along "Optimal Mean Reversion Trading" referenced below for the process)
+
+5: Mean reverting portfolio builder - I would like to introduce sparsity into my portfolio, limiting the number of constituents. Not so necessary now, but as I take this live I will add more stocks. I will be using a greedy algorithm to construct the portfolio from scratch. It is a fast heuristic approach that 40\% of the time finds the optimal solution. I don't have a supercomputer and would like to use lots of data (if I can find it) so this is the best approach for me. It iterates through all the assets, selects the block matrix that yields the least increase in predictability, and repeats until the cardinality constraint is satisfied. (again massive credit to H\&T).
+
+6: Trading the spread - Simio uses ARMA + LSTM after it crosses a standard deviation boundary, but I think that a SARIMAX model is more appropriate and that meta-labeling needs to occur for deep learning to be applicable. The data is too few and noisy for an LSTM to do well so I will be feeding it a collection of pre-existing alpha signals, TA-lib indicators, and using a Shumway Stoffer Smoother to attempt to remove noise from the data. I felt that Kalman smooths too much. Removing noise with wavelets and autoencoders is still on the table I will have to see. I also would like to make the standard deviation trigger relative to the volume.
+
+7: Regime Change - This is something considered both in the backtesting part (not my idea and currently working on how to implement), and also afterwards with Ernest Chan's Conditional Parameter Optimization method that should be based on fundamental data, auto-correlation levels over timeframes, the VRP, and implied correlation. Still a WIP
+
+I will keep you updated when I get finished. If anyone has suggestions please share!
+
+References:
+
+https://www.youtube.com/watch?v=YavO2-sNVcs
+
+https://www.youtube.com/watch?v=WbgglcXfEzA
+
+https://www.youtube.com/watch?v=R22JR4tqqqs
+
+https://www.youtube.com/watch?v=hLV5Roa_Bek
+
+http://pages.stern.nyu.edu/~dbackus/BCZ/HS/BoxTiao_canonical_Bio_77.pdf
+
+A machine learning-based approach to pairs trading.
+
+Machine learning for algorithmic trading.
+
+Geometric Data Analysis.
+
+Manifold learning theory and applications.
+
+https://medium.com/quantitative-investing/optimal-mean-reversion-trading-book-description-contents-and-sample-chapter-c80494b0e24a
+
+\section{Algorithms and Mathematics}
+\end{document}  % End article
