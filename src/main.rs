@@ -28,6 +28,19 @@ use std::time::{Duration, Instant};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    if args[1].trim() == "live" {
+        live();
+    } else if args[1].trim() == "backtest" {
+        backtest();
+    } else if args[1].trim() == "data" {
+        data();
+    } else {
+        panic!("Please input a valid command to initiate program");
+    }
+}
+
+fn live() {
+    let args: Vec<String> = env::args().collect();
     let host: &str = "h35.p.ctrader.com";
     let price_port: u16 = 5211;
     let trade_port: u16 = 5212;
@@ -61,7 +74,7 @@ fn main() {
     let mut counter = 0;
     // Main Loop
     let mut instant = Instant::now();
-    let mut capital: f64 = args[1].trim().parse::<f64>().unwrap();
+    let mut capital: f64 = args[2].trim().parse::<f64>().unwrap();
     let mut connected = true;
     let mut position_id: String = String::new();
 
@@ -225,7 +238,6 @@ fn main() {
             }
         }
     }
-    // backtest();
 }
 fn backtest() {
     // Read the values of csv into bid and offer prices. Format for the analysis function.
@@ -346,4 +358,104 @@ fn backtest() {
         }
     }
     println!("WINS: {}, LOSS: {}", wins_counter, loss_counter);
+}
+
+fn data() {
+    let host: &str = "h35.p.ctrader.com";
+    let price_port: u16 = 5211;
+    let username: String = "3528709".to_string();
+    let password: String =
+        rpassword::read_password_from_tty(Some("Authentication Password: ")).unwrap();
+    let sender_comp_id: String = "pepperstone.3528709".to_string();
+    let target_comp_id: String = "cServer".to_string();
+
+    let constructer: MessageConstructer =
+        MessageConstructer::new(username, password, sender_comp_id, target_comp_id);
+
+    let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", b_regression_size);
+    let mut tls_client_price = TlsClient::new(host, price_port);
+
+    let prices = tls_client_price
+        .market_data_request_establishment(&constructer, "EUR/USD", 1)
+        .unwrap();
+
+    pair.bid_price = prices[0];
+    pair.offer_price = prices[1];
+
+    let mut counter = 0;
+    // Main Loop
+    let mut instant = Instant::now();
+    let mut connected = true;
+
+    loop {
+        if (Utc::now().weekday() == Weekday::Fri
+            && Utc::now().hour() == 21
+            && Utc::now().minute() >= 55)
+            || (Utc::now().weekday() == Weekday::Fri && Utc::now().hour() > 21)
+            || (Utc::now().weekday() == Weekday::Sat)
+            || (Utc::now().weekday() == Weekday::Sun && Utc::now().hour() < 22)
+        {
+            if connected == true {
+                tls_client_price.logout(&constructer, "QUOTE");
+                connected = false;
+            }
+            println!("\n\n\n\n\nMarket Closed, waiting for open\n\n\n\n\n");
+            thread::sleep(Duration::from_secs(60));
+        } else {
+            if connected == false {
+                tls_client_price = TlsClient::new(host, price_port);
+                tls_client_price.logon(&constructer, "QUOTE");
+                let prices = tls_client_price
+                    .market_data_request_establishment(&constructer, "EUR/USD", 1)
+                    .unwrap();
+                pair.bid_price = prices[0];
+                pair.offer_price = prices[1];
+                connected = true;
+            }
+            if instant.elapsed() >= Duration::from_millis(1000) {
+                let prices = match &mut tls_client_price.market_data_update() {
+                    Err(e) => {
+                        if *e == "test_request".to_owned() {
+                            tls_client_price.heartbeat(&constructer, "QUOTE");
+                            [pair.bid_price, pair.offer_price]
+                        } else if *e == "timed_out".to_owned() {
+                            [pair.bid_price, pair.offer_price]
+                        } else if *e == "heartbeat".to_owned() {
+                            [pair.bid_price, pair.offer_price]
+                        } else if *e == "connection_aborted".to_owned() {
+                            thread::sleep(Duration::from_secs(60));
+                            tls_client_price = TlsClient::new(host, price_port);
+                            tls_client_price.logon(&constructer, "QUOTE");
+                            tls_client_price
+                                .market_data_request_establishment(&constructer, "EUR/USD", 1)
+                                .unwrap();
+                            [pair.bid_price, pair.offer_price]
+                        } else if *e == "0_bytes_read".to_owned() {
+                            [pair.bid_price, pair.offer_price]
+                        } else {
+                            panic!("{}", e);
+                        }
+                    }
+                    Ok(x) => [x[0], x[1]],
+                };
+                pair.bid_price = prices[0];
+                pair.offer_price = prices[1];
+            }
+            counter += 1;
+            if counter >= 15 {
+                if tls_client_price.heartbeat(&constructer, "QUOTE")
+                    == "connection_aborted".to_owned()
+                {
+                    thread::sleep(Duration::from_secs(60));
+                    tls_client_price = TlsClient::new(host, price_port);
+                    tls_client_price.logon(&constructer, "QUOTE");
+                    tls_client_price
+                        .market_data_request_establishment(&constructer, "EUR/USD", 1)
+                        .unwrap();
+                }
+                counter = 0;
+            }
+            instant = Instant::now();
+        }
+    }
 }
