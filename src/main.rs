@@ -145,7 +145,7 @@ fn live() {
                 // 2: Sell, when currently not in a postition
                 // 3: Double Buy, to exit a short position and enter a long position
                 // 4: Double sell, to exit a long position and enter a short position
-                let decision: u8 = algorithm::signal_gen(&mut pair);
+                let decision: u8 = algorithm::linear_regression(&mut pair);
                 if decision == 1 {
                     match tls_client_trade.single_order(&constructer, 1, 1, order_quantity, None) {
                         Err(e) => panic!("{}", e),
@@ -264,7 +264,7 @@ fn backtest() {
         linec += 1;
         pair.bid_price = line.unwrap().trim().parse::<f64>().unwrap();
         pair.offer_price = pair.bid_price + spread;
-        let decision = algorithm::signal_gen(&mut pair);
+        let decision = algorithm::linear_regression(&mut pair);
         let order_quantity = (((capital - 0.000001) / 100.0).floor() * 100.0 * leverage) as u64;
         if decision == 1 {
             if pair.owned == false {

@@ -1,14 +1,5 @@
 use crate::forex::CurrencyPair;
-use nalgebra::matrix
 
-pub fn polynomial_regression(pair: &mut CurrencyPair) -> u8 {
-    if pair.pv.len() < pair.regression_size {
-        pair.pv.push(pair.bid_price);
-        return 0;
-    } else {
-        let mut 
-    }
-}
 pub fn linear_regression(pair: &mut CurrencyPair) -> u8 {
     // Length of previous values vector is less than the desired population_size then push offer
     // price.
