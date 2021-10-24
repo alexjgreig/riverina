@@ -369,6 +369,7 @@ fn data() {
     let sender_comp_id: String = "pepperstone.3528709".to_string();
     let target_comp_id: String = "cServer".to_string();
 
+    let b_regression_size = 60 * 24 * 1;
     let constructer: MessageConstructer =
         MessageConstructer::new(username, password, sender_comp_id, target_comp_id);
 
@@ -386,6 +387,12 @@ fn data() {
     // Main Loop
     let mut instant = Instant::now();
     let mut connected = true;
+
+    let mut file = fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("src/eurusd_s.txt")
+        .unwrap();
 
     loop {
         if (Utc::now().weekday() == Weekday::Fri
@@ -440,6 +447,8 @@ fn data() {
                 };
                 pair.bid_price = prices[0];
                 pair.offer_price = prices[1];
+                file.write(format!("{} {}\n", pair.bid_price, pair.offer_price).as_bytes())
+                    .expect("Unable to write file");
             }
             counter += 1;
             if counter >= 15 {
