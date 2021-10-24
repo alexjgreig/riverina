@@ -376,6 +376,7 @@ fn data() {
     let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", b_regression_size);
     let mut tls_client_price = TlsClient::new(host, price_port);
 
+    tls_client_price.logon(&constructer, "QUOTE");
     let prices = tls_client_price
         .market_data_request_establishment(&constructer, "EUR/USD", 1)
         .unwrap();
