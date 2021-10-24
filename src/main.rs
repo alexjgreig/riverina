@@ -392,7 +392,7 @@ fn data() {
     let mut file = fs::OpenOptions::new()
         .append(true)
         .create(true)
-        .open("src/eurusd_s.txt")
+        .open("eurusd_s.txt")
         .unwrap();
 
     loop {
