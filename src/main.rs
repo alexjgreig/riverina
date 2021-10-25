@@ -376,7 +376,7 @@ fn data() {
     let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", b_regression_size);
     let mut tls_client_price = TlsClient::new(host, price_port);
 
-    tls_client_price.logon(&constructer, "QUOTE");
+    println!("{:?}", tls_client_price.logon(&constructer, "QUOTE"));
     let prices = tls_client_price
         .market_data_request_establishment(&constructer, "EUR/USD", 1)
         .unwrap();
@@ -448,7 +448,7 @@ fn data() {
                 };
                 pair.bid_price = prices[0];
                 pair.offer_price = prices[1];
-                file.write(format!("{} {}\n", pair.bid_price, pair.offer_price).as_bytes())
+                file.write(format!("\n{} {}\n", pair.bid_price, pair.offer_price).as_bytes())
                     .expect("Unable to write file");
             }
             counter += 1;
