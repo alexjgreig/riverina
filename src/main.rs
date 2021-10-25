@@ -107,6 +107,7 @@ fn live() {
                 connected = true;
             }
             if instant.elapsed() >= Duration::from_millis(1000) {
+                instant = Instant::now();
                 let prices = match &mut tls_client_price.market_data_update() {
                     Err(e) => {
                         if *e == "test_request".to_owned() {
@@ -234,7 +235,6 @@ fn live() {
                     }
                     counter = 0;
                 }
-                instant = Instant::now();
             }
         }
     }
@@ -376,7 +376,7 @@ fn data() {
     let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", b_regression_size);
     let mut tls_client_price = TlsClient::new(host, price_port);
 
-    println!("{:?}", tls_client_price.logon(&constructer, "QUOTE"));
+    println!("{}", tls_client_price.logon(&constructer, "QUOTE"));
     let prices = tls_client_price
         .market_data_request_establishment(&constructer, "EUR/USD", 1)
         .unwrap();
@@ -421,6 +421,7 @@ fn data() {
                 connected = true;
             }
             if instant.elapsed() >= Duration::from_millis(1000) {
+                instant = Instant::now();
                 let prices = match &mut tls_client_price.market_data_update() {
                     Err(e) => {
                         if *e == "test_request".to_owned() {
@@ -448,24 +449,23 @@ fn data() {
                 };
                 pair.bid_price = prices[0];
                 pair.offer_price = prices[1];
-                file.write(format!("\n{} {}\n", pair.bid_price, pair.offer_price).as_bytes())
+                file.write(format!("{} {}\n", pair.bid_price, pair.offer_price).as_bytes())
                     .expect("Unable to write file");
-            }
-            counter += 1;
-            if counter >= 15 {
-                if tls_client_price.heartbeat(&constructer, "QUOTE")
-                    == "connection_aborted".to_owned()
-                {
-                    thread::sleep(Duration::from_secs(60));
-                    tls_client_price = TlsClient::new(host, price_port);
-                    tls_client_price.logon(&constructer, "QUOTE");
-                    tls_client_price
-                        .market_data_request_establishment(&constructer, "EUR/USD", 1)
-                        .unwrap();
+                counter += 1;
+                if counter >= 15 {
+                    if tls_client_price.heartbeat(&constructer, "QUOTE")
+                        == "connection_aborted".to_owned()
+                    {
+                        thread::sleep(Duration::from_secs(60));
+                        tls_client_price = TlsClient::new(host, price_port);
+                        tls_client_price.logon(&constructer, "QUOTE");
+                        tls_client_price
+                            .market_data_request_establishment(&constructer, "EUR/USD", 1)
+                            .unwrap();
+                    }
+                    counter = 0;
                 }
-                counter = 0;
             }
-            instant = Instant::now();
         }
     }
 }
