@@ -1,13 +1,14 @@
+// TODO: Look at the ideas found in research articles for statistical arbitrage, pairs trading,
+// cointegration.
 // Attempting to exploit the inefficency's of the market for profit, i.e the prices oscillating
 // around a mean / objective price enables reversions to the mean to be targeted.
 //TODO: Look into sharpe ration and see the draw down, e.g. in the backtest
 //TODO: Could try to implement a mean reversion strategy and momentum together to get the best of
 //both worlds.
 //TODO: Volitility could be added to strengthen the algorithm, ATR and realised volitality
-//TODO: From james roche time series forcasting which enables you to find trends, TC_trending
-//indicatorTSF or even a stochaistic.
 //TODO: Look into Markov Chains / Hidden Markov Models / Markov regime switching models and
 //possible incorporate ideas of stochastics into the decision making process.
+
 mod algorithm;
 mod forex;
 mod message_constructer;
@@ -373,13 +374,20 @@ fn data() {
     let constructer: MessageConstructer =
         MessageConstructer::new(username, password, sender_comp_id, target_comp_id);
 
-    let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", b_regression_size);
+    let mut pairs: Vec<CurrencyPair> = Vec::new();
+
+    pairs.push(CurrencyPair::new("EUR/USD".to_owned()));
+
     let mut tls_client_price = TlsClient::new(host, price_port);
 
     println!("{}", tls_client_price.logon(&constructer, "QUOTE"));
-    let prices = tls_client_price
-        .market_data_request_establishment(&constructer, "EUR/USD", 1)
-        .unwrap();
+
+    //TODO: Finish the initialisation of the prices
+    for i in 0..pairs.len() {
+        tls_client_price
+            .market_data_request_establishment(&constructer, pairs[i].name, pairs[i].id)
+            .unwrap();
+    }
 
     pair.bid_price = prices[0];
     pair.offer_price = prices[1];
@@ -396,6 +404,7 @@ fn data() {
         .unwrap();
 
     loop {
+        //TODO: Need to cycle through pairs vector and return price for each of them.
         if (Utc::now().weekday() == Weekday::Fri
             && Utc::now().hour() == 21
             && Utc::now().minute() >= 55)

@@ -1,5 +1,5 @@
 use std::fmt;
-pub struct CurrencyPair<'a> {
+pub struct CurrencyPair {
     pub bid_price: f64,
     pub offer_price: f64,
     pub buy_price: f64,
@@ -14,20 +14,20 @@ pub struct CurrencyPair<'a> {
     pub pv: Vec<f64>,
     pub stop_loss: f64,
     pub profit_limit: f64,
-    pub regression_size: usize,
-    pub id: &'a str,
+    pub id: u64,
+    pub name: String,
 }
-impl fmt::Display for CurrencyPair<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl fmt::Display for CurrencyPair {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "ID: {}\nbid price: {}\noffer price: {}\nbuy price: {}\nsell price: {}\nowned: {}\ndirection: {}\nb_b1: {}\nb_b0: {}\ns_b1: {}\ns_b0: {}\npv length (hour): {}\n\n",
-            self.id, self.bid_price, self.offer_price, self.buy_price, self.sell_price, self.owned, self.direction, self.b_b1, self.b_b0, self.s_b1, self.s_b0, (self.pv.len() as f64 / 60.0 / 60.0)
+            "Name: {}\nbid price: {}\noffer price: {}\nbuy price: {}\nsell price: {}\nowned: {}\ndirection: {}\nb_b1: {}\nb_b0: {}\ns_b1: {}\ns_b0: {}\npv length (hour): {}\n\n",
+            self.name, self.bid_price, self.offer_price, self.buy_price, self.sell_price, self.owned, self.direction, self.b_b1, self.b_b0, self.s_b1, self.s_b0, (self.pv.len() as f64 / 60.0 / 60.0)
         )
     }
 }
-impl<'a> CurrencyPair<'a> {
-    pub fn new(id: &'a str, regression_size: usize) -> CurrencyPair<'a> {
+impl CurrencyPair {
+    pub fn new(name: String, id: u64) -> CurrencyPair {
         CurrencyPair {
             bid_price: 0.00,
             offer_price: 0.00,
@@ -42,8 +42,8 @@ impl<'a> CurrencyPair<'a> {
             pv: Vec::new(),
             stop_loss: 0.00,
             profit_limit: 0.00,
-            regression_size: regression_size,
             id: id,
+            name: name,
         }
     }
 }
