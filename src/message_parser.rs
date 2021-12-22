@@ -41,6 +41,7 @@ fn parse_market_request(msg: String) -> Result<String, String> {
     let tags: Vec<&str> = msg.split("\u{0001}").collect::<Vec<&str>>();
     let mut bid_price: String = String::new();
     let mut offer_price: String = String::new();
+    let mut symbol: u32 = 0;
     if msg.contains("35=3") {
         for tag in tags {
             if tag.contains("58=") {
@@ -53,13 +54,15 @@ fn parse_market_request(msg: String) -> Result<String, String> {
         return Err(format!("Could not parse FIX Message, Message: {}", msg));
     } else if msg.contains("35=W") {
         for (index, value) in tags.iter().enumerate() {
-            if value.contains("269=0") {
+            if value.contains("55=") {
+                symbol = tags[index][3..].parse::<u32>().unwrap();
+            } else if value.contains("269=0") {
                 bid_price = tags[index + 1][4..].to_string();
             } else if value.contains("269=1") {
                 offer_price = tags[index + 1][4..].to_string();
             }
         }
-        return Ok(format!("{},{}", bid_price, offer_price));
+        return Ok(format!("{},{},{}", symbol, bid_price, offer_price));
     } else {
         return Err(format!("Could not parse FIX Message, Message: {}", msg));
     }

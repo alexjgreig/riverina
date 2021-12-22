@@ -1,5 +1,5 @@
 use std::fmt;
-pub struct CurrencyPair {
+pub struct CurrencyPair<'a> {
     pub bid_price: f64,
     pub offer_price: f64,
     pub buy_price: f64,
@@ -14,10 +14,10 @@ pub struct CurrencyPair {
     pub pv: Vec<f64>,
     pub stop_loss: f64,
     pub profit_limit: f64,
-    pub id: u64,
-    pub name: String,
+    pub id: u32,
+    pub name: &'a str,
 }
-impl fmt::Display for CurrencyPair {
+impl<'a> fmt::Display for CurrencyPair<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -26,8 +26,8 @@ impl fmt::Display for CurrencyPair {
         )
     }
 }
-impl CurrencyPair {
-    pub fn new(name: String, id: u64) -> CurrencyPair {
+impl<'a> CurrencyPair<'a> {
+    pub fn new(name: &str, id: u32) -> CurrencyPair {
         CurrencyPair {
             bid_price: 0.00,
             offer_price: 0.00,

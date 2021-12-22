@@ -41,7 +41,7 @@ impl TlsClient {
         let dns_name = webpki::DNSNameRef::try_from_ascii_str(host).unwrap();
         let socket = TcpStream::connect((host, port)).unwrap();
         socket
-            .set_read_timeout(Some(Duration::from_millis(900)))
+            .set_read_timeout(Some(Duration::from_millis(1100)))
             .unwrap();
         let tls_session = rustls::ClientSession::new(&Arc::new(config), dns_name);
 
@@ -85,7 +85,7 @@ impl TlsClient {
         constructer: &MessageConstructer,
         mdr_id: &str,
         symbol: u32,
-    ) -> Result<Vec<f64>, String> {
+    ) -> Result<(u32, f64, f64), String> {
         let mut buffer = [0u8; 10000];
         self.write(
             constructer
@@ -129,18 +129,18 @@ impl TlsClient {
                     } else if parsed_message == "heartbeat".to_owned() {
                         return Err(parsed_message);
                     } else {
-                        return Ok(parsed_message
-                            .split(',')
-                            .collect::<Vec<_>>()
-                            .iter()
-                            .map(|x| x.parse::<f64>().unwrap())
-                            .collect::<Vec<f64>>());
+                        let res = parsed_message.split(',').collect::<Vec<_>>();
+                        return Ok((
+                            res[0].parse::<u32>().unwrap(),
+                            res[1].parse::<f64>().unwrap(),
+                            res[2].parse::<f64>().unwrap(),
+                        ));
                     }
                 }
             }
         }
     }
-    pub fn market_data_update(&mut self) -> Result<Vec<f64>, String> {
+    pub fn market_data_update(&mut self) -> Result<(u32, f64, f64), String> {
         let mut buffer = [0u8; 10000];
         match self.read(&mut buffer) {
             Err(e) => {
@@ -170,12 +170,12 @@ impl TlsClient {
                     } else if parsed_message == "heartbeat".to_owned() {
                         return Err(parsed_message);
                     } else {
-                        return Ok(parsed_message
-                            .split(',')
-                            .collect::<Vec<_>>()
-                            .iter()
-                            .map(|x| x.parse::<f64>().unwrap())
-                            .collect::<Vec<f64>>());
+                        let res = parsed_message.split(',').collect::<Vec<_>>();
+                        return Ok((
+                            res[0].parse::<u32>().unwrap(),
+                            res[1].parse::<f64>().unwrap(),
+                            res[2].parse::<f64>().unwrap(),
+                        ));
                     }
                 }
             }

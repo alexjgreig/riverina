@@ -9,7 +9,7 @@
 //TODO: Look into Markov Chains / Hidden Markov Models / Markov regime switching models and
 //possible incorporate ideas of stochastics into the decision making process.
 
-mod algorithm;
+// mod algorithm;
 mod forex;
 mod message_constructer;
 mod message_parser;
@@ -30,16 +30,16 @@ use std::time::{Duration, Instant};
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args[1].trim() == "live" {
-        live();
+        // live();
     } else if args[1].trim() == "backtest" {
-        backtest();
+        // backtest();
     } else if args[1].trim() == "data" {
         data();
     } else {
         panic!("Please input a valid command to initiate program");
     }
 }
-
+/*
 fn live() {
     let args: Vec<String> = env::args().collect();
     let host: &str = "h35.p.ctrader.com";
@@ -361,6 +361,8 @@ fn backtest() {
     println!("WINS: {}, LOSS: {}", wins_counter, loss_counter);
 }
 
+*/
+
 fn data() {
     let host: &str = "h35.p.ctrader.com";
     let price_port: u16 = 5211;
@@ -370,27 +372,31 @@ fn data() {
     let sender_comp_id: String = "pepperstone.3528709".to_string();
     let target_comp_id: String = "cServer".to_string();
 
-    let b_regression_size = 60 * 24 * 1;
     let constructer: MessageConstructer =
         MessageConstructer::new(username, password, sender_comp_id, target_comp_id);
 
     let mut pairs: Vec<CurrencyPair> = Vec::new();
 
-    pairs.push(CurrencyPair::new("EUR/USD".to_owned()));
+    pairs.push(CurrencyPair::new("EUR/USD", 1));
+    pairs.push(CurrencyPair::new("GBP/USD", 2));
+    pairs.push(CurrencyPair::new("USD/JPY", 4));
+    pairs.push(CurrencyPair::new("AUD/USD", 5));
+    pairs.push(CurrencyPair::new("USD/CHF", 6));
+    pairs.push(CurrencyPair::new("USD/CAD", 8));
 
     let mut tls_client_price = TlsClient::new(host, price_port);
 
     println!("{}", tls_client_price.logon(&constructer, "QUOTE"));
 
-    //TODO: Finish the initialisation of the prices
-    for i in 0..pairs.len() {
-        tls_client_price
-            .market_data_request_establishment(&constructer, pairs[i].name, pairs[i].id)
+    //TODO: Finish Initalisation of the pairs
+    for pair in pairs.iter_mut() {
+        let prices = tls_client_price
+            .market_data_request_establishment(&constructer, pair.name, pair.id)
             .unwrap();
-    }
 
-    pair.bid_price = prices[0];
-    pair.offer_price = prices[1];
+        pair.bid_price = prices.1;
+        pair.offer_price = prices.2;
+    }
 
     let mut counter = 0;
     // Main Loop
@@ -400,11 +406,10 @@ fn data() {
     let mut file = fs::OpenOptions::new()
         .append(true)
         .create(true)
-        .open("eurusd_s.txt")
+        .open("hist_s.txt")
         .unwrap();
 
     loop {
-        //TODO: Need to cycle through pairs vector and return price for each of them.
         if (Utc::now().weekday() == Weekday::Fri
             && Utc::now().hour() == 21
             && Utc::now().minute() >= 55)
@@ -422,45 +427,71 @@ fn data() {
             if connected == false {
                 tls_client_price = TlsClient::new(host, price_port);
                 tls_client_price.logon(&constructer, "QUOTE");
-                let prices = tls_client_price
-                    .market_data_request_establishment(&constructer, "EUR/USD", 1)
-                    .unwrap();
-                pair.bid_price = prices[0];
-                pair.offer_price = prices[1];
+                for pair in pairs.iter_mut() {
+                    let prices = tls_client_price
+                        .market_data_request_establishment(&constructer, pair.name, pair.id)
+                        .unwrap();
+
+                    pair.bid_price = prices.1;
+                    pair.offer_price = prices.2;
+                }
                 connected = true;
+                println!("Market Started, Connected to Exchange");
             }
             if instant.elapsed() >= Duration::from_millis(1000) {
                 instant = Instant::now();
-                let prices = match &mut tls_client_price.market_data_update() {
-                    Err(e) => {
-                        if *e == "test_request".to_owned() {
-                            tls_client_price.heartbeat(&constructer, "QUOTE");
-                            [pair.bid_price, pair.offer_price]
-                        } else if *e == "timed_out".to_owned() {
-                            [pair.bid_price, pair.offer_price]
-                        } else if *e == "heartbeat".to_owned() {
-                            [pair.bid_price, pair.offer_price]
-                        } else if *e == "connection_aborted".to_owned() {
-                            thread::sleep(Duration::from_secs(60));
-                            tls_client_price = TlsClient::new(host, price_port);
-                            tls_client_price.logon(&constructer, "QUOTE");
-                            tls_client_price
-                                .market_data_request_establishment(&constructer, "EUR/USD", 1)
-                                .unwrap();
-                            [pair.bid_price, pair.offer_price]
-                        } else if *e == "0_bytes_read".to_owned() {
-                            [pair.bid_price, pair.offer_price]
-                        } else {
-                            panic!("{}", e);
+
+                for _ in 0..pairs.len() {
+                    //TODO: Need to cycle through pairs vector and return price for each of them.
+                    match &mut tls_client_price.market_data_update() {
+                        Err(e) => {
+                            if *e == "test_request".to_owned() {
+                                tls_client_price.heartbeat(&constructer, "QUOTE");
+                            } else if *e == "timed_out".to_owned() {
+                                //Reading operation timed out, no response within timeout property
+                            } else if *e == "heartbeat".to_owned() {
+                                println!("Received heartbeat from server");
+                            } else if *e == "connection_aborted".to_owned() {
+                                thread::sleep(Duration::from_secs(60));
+                                tls_client_price = TlsClient::new(host, price_port);
+                                tls_client_price.logon(&constructer, "QUOTE");
+                                for pair in pairs.iter_mut() {
+                                    let prices = tls_client_price
+                                        .market_data_request_establishment(
+                                            &constructer,
+                                            pair.name,
+                                            pair.id,
+                                        )
+                                        .unwrap();
+
+                                    pair.bid_price = prices.1;
+                                    pair.offer_price = prices.2;
+                                }
+                            } else if *e == "0_bytes_read".to_owned() {
+                                //0 bytes in the buffer
+                            } else {
+                                panic!("{}", e);
+                            }
+                        }
+                        Ok(x) => {
+                            for pair in pairs.iter_mut() {
+                                if pair.id == x.0 {
+                                    pair.bid_price = x.1;
+                                    pair.offer_price = x.2;
+                                }
+                            }
                         }
                     }
-                    Ok(x) => [x[0], x[1]],
-                };
-                pair.bid_price = prices[0];
-                pair.offer_price = prices[1];
-                file.write(format!("{} {}\n", pair.bid_price, pair.offer_price).as_bytes())
+                }
+                for pair in pairs.iter() {
+                    file.write(
+                        format!("{} {} {}\n", pair.name, pair.bid_price, pair.offer_price)
+                            .as_bytes(),
+                    )
                     .expect("Unable to write file");
+                }
                 counter += 1;
+                println!("counter: {}", counter);
                 if counter >= 15 {
                     if tls_client_price.heartbeat(&constructer, "QUOTE")
                         == "connection_aborted".to_owned()
@@ -468,9 +499,14 @@ fn data() {
                         thread::sleep(Duration::from_secs(60));
                         tls_client_price = TlsClient::new(host, price_port);
                         tls_client_price.logon(&constructer, "QUOTE");
-                        tls_client_price
-                            .market_data_request_establishment(&constructer, "EUR/USD", 1)
-                            .unwrap();
+                        for pair in pairs.iter_mut() {
+                            let prices = tls_client_price
+                                .market_data_request_establishment(&constructer, pair.name, pair.id)
+                                .unwrap();
+
+                            pair.bid_price = prices.1;
+                            pair.offer_price = prices.2;
+                        }
                     }
                     counter = 0;
                 }
