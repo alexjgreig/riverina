@@ -1,9 +1,26 @@
 use crate::forex::CurrencyPair;
 
-pub fn linear_regression(pair: &mut CurrencyPair) -> u8 {
+//TODO: Write co-integration algorithm to find the 'correlation' of the forex pairs, and create a
+//portfolio using this. Then
+
+//Every pair combination within the list of pairs will have the cointegration tested.
+pub fn pairs_coint(pairs: &Vec<CurrencyPair>) {
+    for i in 0..pairs.len() {
+        for j in (i + 1)..pairs.len() {
+            let value = cointegration(pairs[i], pairs[j]);
+            i += 1;
+        }
+    }
+}
+
+// Finds the co-integration value of two forex pairs given a certain time series of data. Used to
+// find possible correlation between the two data sets.
+fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) {}
+
+pub fn linear_regression(pair: &mut CurrencyPair, regression_size: usize) -> u8 {
     // Length of previous values vector is less than the desired population_size then push offer
     // price.
-    if pair.pv.len() < pair.regression_size {
+    if pair.pv.len() < regression_size {
         pair.pv.push(pair.bid_price);
         return 0;
     } else {
@@ -24,8 +41,8 @@ pub fn linear_regression(pair: &mut CurrencyPair) -> u8 {
             b_y_c = (b_y_t - b_y_sum) - b_y_y;
             b_y_sum = b_y_t;
         }
-        let b_x_mean: f64 = b_x_sum / pair.regression_size as f64;
-        let b_y_mean: f64 = b_y_sum / pair.regression_size as f64;
+        let b_x_mean: f64 = b_x_sum / regression_size as f64;
+        let b_y_mean: f64 = b_y_sum / regression_size as f64;
 
         let mut b_sumx_dif2: f64 = 0.00;
         let mut b_sumy_dif2: f64 = 0.00;
@@ -35,14 +52,14 @@ pub fn linear_regression(pair: &mut CurrencyPair) -> u8 {
             b_sumy_dif2 += (value - b_y_mean).powf(2.0);
         }
 
-        let b_s_x: f64 = (1.0 / (pair.regression_size as f64 - 1.0) * b_sumx_dif2).sqrt();
-        let b_s_y: f64 = (1.0 / (pair.regression_size as f64 - 1.0) * b_sumy_dif2).sqrt();
+        let b_s_x: f64 = (1.0 / (regression_size as f64 - 1.0) * b_sumx_dif2).sqrt();
+        let b_s_y: f64 = (1.0 / (regression_size as f64 - 1.0) * b_sumy_dif2).sqrt();
 
         let mut b_r: f64 = 0.00;
         for (index, value) in pair.pv.iter().enumerate() {
             b_r += ((index as f64 - b_x_mean) / b_s_x) * ((value - b_y_mean) / b_s_y);
         }
-        b_r = b_r * 1.0 / (pair.regression_size as f64 - 1.0);
+        b_r = b_r * 1.0 / (regression_size as f64 - 1.0);
         pair.b_b1 = b_r * (b_s_y / b_s_x);
         pair.b_b0 = b_y_mean - pair.b_b1 * b_x_mean;
 
@@ -51,8 +68,8 @@ pub fn linear_regression(pair: &mut CurrencyPair) -> u8 {
         let mut s_y_sum: f64 = 0.00;
         let mut s_y_c: f64 = 0.00;
 
-        let s_regression_size = pair.regression_size / 2;
-        let lower_bound = pair.regression_size - s_regression_size;
+        let s_regression_size = regression_size / 2;
+        let lower_bound = regression_size - s_regression_size;
         for (index, value) in (&pair.pv[lower_bound..pair.pv.len()]).iter().enumerate() {
             //kahan summation algorithm
             let s_x_y = index as f64 - s_x_c;

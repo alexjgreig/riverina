@@ -9,7 +9,7 @@
 //TODO: Look into Markov Chains / Hidden Markov Models / Markov regime switching models and
 //possible incorporate ideas of stochastics into the decision making process.
 
-// mod algorithm;
+mod algorithm;
 mod forex;
 mod message_constructer;
 mod message_parser;
@@ -32,7 +32,7 @@ fn main() {
     if args[1].trim() == "live" {
         // live();
     } else if args[1].trim() == "backtest" {
-        // backtest();
+        backtest();
     } else if args[1].trim() == "data" {
         data();
     } else {
@@ -240,11 +240,12 @@ fn live() {
         }
     }
 }
+*/
 fn backtest() {
     // Read the values of csv into bid and offer prices. Format for the analysis function.
     // Time, Open, High, Low, Close, Volume
-    let b_regression_size = 60 * 24 * 1;
-    let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", b_regression_size);
+    let regression_size = 60 * 60 * 6;
+    let mut pair: CurrencyPair = CurrencyPair::new("EUR/USD", 1);
     let spread: f64 = 0.00001;
     let mut capital: f64 = 1000.0;
 
@@ -254,7 +255,7 @@ fn backtest() {
         .open("src/backtest.txt")
         .unwrap();
 
-    let reader = BufReader::new(File::open("src/EURUSD_1M.txt").expect("CANNOT OPEN FILE"));
+    let reader = BufReader::new(File::open("hist/eurusd_s.txt").expect("CANNOT OPEN FILE"));
 
     let leverage = 10.0;
     let mut wins_counter = 0;
@@ -263,9 +264,16 @@ fn backtest() {
 
     for line in reader.lines() {
         linec += 1;
-        pair.bid_price = line.unwrap().trim().parse::<f64>().unwrap();
-        pair.offer_price = pair.bid_price + spread;
-        let decision = algorithm::linear_regression(&mut pair);
+        let prices: Vec<String> = line
+            .unwrap()
+            .trim()
+            .split(" ")
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+        pair.bid_price = prices[0].parse::<f64>().unwrap();
+        pair.offer_price = prices[1].parse::<f64>().unwrap();
+
+        let decision = algorithm::linear_regression(&mut pair, regression_size);
         let order_quantity = (((capital - 0.000001) / 100.0).floor() * 100.0 * leverage) as u64;
         if decision == 1 {
             if pair.owned == false {
@@ -361,8 +369,6 @@ fn backtest() {
     println!("WINS: {}, LOSS: {}", wins_counter, loss_counter);
 }
 
-*/
-
 fn data() {
     let host: &str = "h35.p.ctrader.com";
     let price_port: u16 = 5211;
@@ -388,7 +394,6 @@ fn data() {
 
     println!("{}", tls_client_price.logon(&constructer, "QUOTE"));
 
-    //TODO: Finish Initalisation of the pairs
     for pair in pairs.iter_mut() {
         let prices = tls_client_price
             .market_data_request_establishment(&constructer, pair.name, pair.id)
@@ -442,7 +447,6 @@ fn data() {
                 instant = Instant::now();
 
                 for _ in 0..pairs.len() {
-                    //TODO: Need to cycle through pairs vector and return price for each of them.
                     match &mut tls_client_price.market_data_update() {
                         Err(e) => {
                             if *e == "test_request".to_owned() {
@@ -491,7 +495,6 @@ fn data() {
                     .expect("Unable to write file");
                 }
                 counter += 1;
-                println!("counter: {}", counter);
                 if counter >= 15 {
                     if tls_client_price.heartbeat(&constructer, "QUOTE")
                         == "connection_aborted".to_owned()
