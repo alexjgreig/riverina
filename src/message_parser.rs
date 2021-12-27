@@ -67,9 +67,10 @@ fn parse_market_request(msg: String) -> Result<String, String> {
         return Err(format!("Could not parse FIX Message, Message: {}", msg));
     }
 }
-fn parse_order_request(msg: String) -> Result<String, String> {
+fn parse_order_request(msg: String) -> Result<(String, f64), String> {
     let tags: Vec<&str> = msg.split("\u{0001}").collect::<Vec<&str>>();
     let mut position_id: String = String::new();
+    let mut price_filled: f64 = 0.00;
     // let mut fill_price: String = String::new();
     // let mut quantity_filled: String = String::new();
     println!("{}", msg);
@@ -91,8 +92,11 @@ fn parse_order_request(msg: String) -> Result<String, String> {
                 if tag.contains("721=") {
                     position_id = tag[4..].to_string();
                 }
+                if tag.contains("6=") {
+                    price_filled = tag[2..].to_string().parse::<f64>().unwrap();
+                }
             }
-            return Ok(position_id);
+            return Ok((position_id, price_filled));
         }
     } else {
         return Err(format!("Could not parse FIX Message, Message: {}", msg));

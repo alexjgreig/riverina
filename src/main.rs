@@ -383,12 +383,64 @@ fn data() {
 
     let mut pairs: Vec<CurrencyPair> = Vec::new();
 
+    //MAJORS
     pairs.push(CurrencyPair::new("EUR/USD", 1));
     pairs.push(CurrencyPair::new("GBP/USD", 2));
     pairs.push(CurrencyPair::new("USD/JPY", 4));
     pairs.push(CurrencyPair::new("AUD/USD", 5));
     pairs.push(CurrencyPair::new("USD/CHF", 6));
     pairs.push(CurrencyPair::new("USD/CAD", 8));
+    //MINORS
+    pairs.push(CurrencyPair::new("AUD/CAD", 18));
+    pairs.push(CurrencyPair::new("AUD/CHF", 23));
+    pairs.push(CurrencyPair::new("AUD/NZD", 20));
+    pairs.push(CurrencyPair::new("AUD/SGD", 43));
+    pairs.push(CurrencyPair::new("EUR/AUD", 14));
+    pairs.push(CurrencyPair::new("EUR/CHF", 10));
+    pairs.push(CurrencyPair::new("EUR/GBP", 9));
+    pairs.push(CurrencyPair::new("GBP/AUD", 16));
+    pairs.push(CurrencyPair::new("GBP/CHF", 40));
+    pairs.push(CurrencyPair::new("NZD/USD", 12));
+    //CROSSES
+    pairs.push(CurrencyPair::new("EUR/JPY", 3));
+    pairs.push(CurrencyPair::new("GBP/JPY", 7));
+    pairs.push(CurrencyPair::new("AUD/JPY", 11));
+    pairs.push(CurrencyPair::new("CHF/JPY", 13));
+    pairs.push(CurrencyPair::new("CAD/JPY", 15));
+    pairs.push(CurrencyPair::new("EUR/CAD", 17));
+    pairs.push(CurrencyPair::new("GBP/CAD", 19));
+    pairs.push(CurrencyPair::new("NZD/JPY", 21));
+    pairs.push(CurrencyPair::new("GBP/NZD", 25));
+    pairs.push(CurrencyPair::new("EUR/NZD", 26));
+    pairs.push(CurrencyPair::new("CAD/CHF", 27));
+    pairs.push(CurrencyPair::new("NZD/CAD", 30));
+    pairs.push(CurrencyPair::new("NZD/CHF", 39));
+    pairs.push(CurrencyPair::new("SGD/JPY", 58));
+    //EXOTICS
+    pairs.push(CurrencyPair::new("USD/NOK", 22));
+    pairs.push(CurrencyPair::new("USD/MXN", 24));
+    pairs.push(CurrencyPair::new("USD/SGD", 28));
+    pairs.push(CurrencyPair::new("USD/SEK", 29));
+    pairs.push(CurrencyPair::new("EUR/SEK", 31));
+    pairs.push(CurrencyPair::new("GBP/SGD", 32));
+    pairs.push(CurrencyPair::new("EUR/NOK", 33));
+    pairs.push(CurrencyPair::new("EUR/HUF", 34));
+    pairs.push(CurrencyPair::new("USD/PLN", 35));
+    pairs.push(CurrencyPair::new("EUR/CZK", 45));
+    pairs.push(CurrencyPair::new("EUR/PLN", 48));
+    pairs.push(CurrencyPair::new("EUR/SGD", 49));
+    pairs.push(CurrencyPair::new("EUR/ZAR", 51));
+    pairs.push(CurrencyPair::new("GBP/SEK", 53));
+    pairs.push(CurrencyPair::new("NOK/JPY", 55));
+    pairs.push(CurrencyPair::new("NOK/SEK", 56));
+    pairs.push(CurrencyPair::new("SEK/JPY", 57));
+    pairs.push(CurrencyPair::new("USD/CZK", 59));
+    pairs.push(CurrencyPair::new("USD/HKD", 60));
+    pairs.push(CurrencyPair::new("USD/ZAR", 62));
+    pairs.push(CurrencyPair::new("USD/HUF", 68));
+    pairs.push(CurrencyPair::new("USD/RUB", 70));
+    pairs.push(CurrencyPair::new("USD/CNH", 71));
+    pairs.push(CurrencyPair::new("ZAR/JPY", 10027));
 
     let mut tls_client_price = TlsClient::new(host, price_port);
 
