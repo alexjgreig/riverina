@@ -273,7 +273,7 @@ fn backtest() {
         pair.bid_price = prices[0].parse::<f64>().unwrap();
         pair.offer_price = prices[1].parse::<f64>().unwrap();
 
-        let decision = algorithm::linear_regression(&mut pair, regression_size);
+        let decision = algorithm::pair_linear_regression(&mut pair, regression_size);
         let order_quantity = (((capital - 0.000001) / 100.0).floor() * 100.0 * leverage) as u64;
         if decision == 1 {
             if pair.owned == false {

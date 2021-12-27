@@ -6,19 +6,17 @@ use crate::forex::CurrencyPair;
 // Finds the co-integration value of two forex pairs given a certain time series of data. Used to
 // find possible correlation between the two data sets.
 fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) -> f64 {
-    
+    return 0.00;
 }
 
 //Every pair combination within the list of pairs will have the cointegration tested.
 pub fn pairs_coint(pairs: &Vec<CurrencyPair>) {
     for i in 0..pairs.len() {
         for j in (i + 1)..pairs.len() {
-            let value = cointegration(pairs[i], pairs[j]);
-            i += 1;
+            let value = cointegration(&pairs[i], &pairs[j]);
         }
     }
 }
-
 
 pub fn linear_regression(values: Vec<f64>, regression_size: usize) -> (f64, f64) {
     // Length of previous values vector is less than the desired population_size then push offer
@@ -62,10 +60,9 @@ pub fn linear_regression(values: Vec<f64>, regression_size: usize) -> (f64, f64)
     let b1 = r * (s_y / s_x);
     let b0 = y_mean - b1 * x_mean;
 
-    return (b_0, b_1);
+    return (b0, b1);
 }
 
-/*
 pub fn pair_linear_regression(pair: &mut CurrencyPair, regression_size: usize) -> u8 {
     // Length of previous values vector is less than the desired population_size then push offer
     // price.
@@ -73,38 +70,16 @@ pub fn pair_linear_regression(pair: &mut CurrencyPair, regression_size: usize) -
         pair.pv.push(pair.bid_price);
         return 0;
     } else {
-        let base = linear_regression(pair.pv, regression_size);
-        let signal = linear_regression(pair.pv, regression_size / 2);
+        let base = linear_regression(pair.pv.clone(), regression_size);
+        let signal = linear_regression(pair.pv.clone(), regression_size / 2);
 
         pair.b_b0 = base.0;
         pair.b_b1 = base.1;
         pair.s_b0 = signal.0;
         pair.s_b1 = signal.1;
 
-        let mut pos: u64 = 0;
-        let mut neg: u64 = 0;
-        for i in 0..pair.pv.len() / 60 - 1 {
-            if (pair.pv[i * 60] - pair.pv[(i + 1) * 60]) > 0.0 {
-                neg += 1;
-            } else if (pair.pv[i * 60] - pair.pv[(i + 1) * 60]) < 0.0 {
-                pos += 1;
-            }
-        }
-        pair.trend = (pos as f64) / ((neg as f64) + (pos as f64));
-
         let stop_loss: f64 = 0.007;
         let profit_limit: f64 = 100.0;
-
-        let mut pos: u64 = 0;
-        let mut neg: u64 = 0;
-        for i in 0..pair.pv.len() - 1 {
-            if (pair.pv[i] - pair.pv[(i + 1)]) > 0.0 {
-                neg += 1;
-            } else if (pair.pv[i] - pair.pv[(i + 1)]) < 0.0 {
-                pos += 1;
-            }
-        }
-        pair.trend = (pos as f64) / ((neg as f64) + (pos as f64));
 
         if pair.owned == true
             && pair.direction == true
@@ -117,8 +92,6 @@ pub fn pair_linear_regression(pair: &mut CurrencyPair, regression_size: usize) -
         {
             pair.stop_loss = pair.offer_price + stop_loss;
         }
-        let stop_loss: f64 = 0.007;
-        let profit_limit: f64 = 100.0;
 
         if pair.direction == false && pair.owned == true && pair.offer_price > pair.stop_loss {
             // Buy from stop loss being hit
@@ -220,5 +193,4 @@ pub fn pair_linear_regression(pair: &mut CurrencyPair, regression_size: usize) -
             return 0;
         }
     }
-*/
 }
