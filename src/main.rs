@@ -530,7 +530,6 @@ fn data() {
                     Ok(x) => {
                         for pair in pairs.iter_mut() {
                             if pair.id == x.0 {
-                                println!("{}", pair.id);
                                 pair.bid_price = x.1;
                                 pair.offer_price = x.2;
                             }
