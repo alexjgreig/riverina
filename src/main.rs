@@ -416,7 +416,8 @@ fn data() {
     pairs.push(CurrencyPair::new("NZD/CAD", 30));
     pairs.push(CurrencyPair::new("NZD/CHF", 39));
     pairs.push(CurrencyPair::new("SGD/JPY", 58));
-    //EXOTICS
+    //EXOTICS - They instruments close from the market randomly it seems
+
     pairs.push(CurrencyPair::new("USD/NOK", 22));
     pairs.push(CurrencyPair::new("USD/MXN", 24));
     pairs.push(CurrencyPair::new("USD/SGD", 28));
@@ -495,59 +496,53 @@ fn data() {
                 connected = true;
                 println!("Market Started, Connected to Exchange");
             }
-            if instant.elapsed() >= Duration::from_millis(1000) {
-                instant = Instant::now();
-
-                for _ in 0..pairs.len() {
-                    match &mut tls_client_price.market_data_update() {
-                        Err(e) => {
-                            if *e == "test_request".to_owned() {
-                                tls_client_price.heartbeat(&constructer, "QUOTE");
-                            } else if *e == "timed_out".to_owned() {
-                                //Reading operation timed out, no response within timeout property
-                            } else if *e == "heartbeat".to_owned() {
-                                println!("Received heartbeat from server");
-                            } else if *e == "connection_aborted".to_owned() {
-                                thread::sleep(Duration::from_secs(60));
-                                tls_client_price = TlsClient::new(host, price_port);
-                                tls_client_price.logon(&constructer, "QUOTE");
-                                for pair in pairs.iter_mut() {
-                                    let prices = tls_client_price
-                                        .market_data_request_establishment(
-                                            &constructer,
-                                            pair.name,
-                                            pair.id,
-                                        )
-                                        .unwrap();
-
-                                    pair.bid_price = prices.1;
-                                    pair.offer_price = prices.2;
-                                }
-                            } else if *e == "0_bytes_read".to_owned() {
-                                //0 bytes in the buffer
-                            } else {
-                                panic!("{}", e);
-                            }
-                        }
-                        Ok(x) => {
+            if instant.elapsed() < Duration::from_millis(1000) {
+                match &mut tls_client_price.market_data_update() {
+                    Err(e) => {
+                        if *e == "test_request".to_owned() {
+                            tls_client_price.heartbeat(&constructer, "QUOTE");
+                        } else if *e == "timed_out".to_owned() {
+                            //Reading operation timed out, no response within timeout property
+                        } else if *e == "heartbeat".to_owned() {
+                            println!("Received heartbeat from server");
+                        } else if *e == "connection_aborted".to_owned() {
+                            thread::sleep(Duration::from_secs(60));
+                            tls_client_price = TlsClient::new(host, price_port);
+                            tls_client_price.logon(&constructer, "QUOTE");
                             for pair in pairs.iter_mut() {
-                                if pair.id == x.0 {
-                                    pair.bid_price = x.1;
-                                    pair.offer_price = x.2;
-                                }
+                                let prices = tls_client_price
+                                    .market_data_request_establishment(
+                                        &constructer,
+                                        pair.name,
+                                        pair.id,
+                                    )
+                                    .unwrap();
+
+                                pair.bid_price = prices.1;
+                                pair.offer_price = prices.2;
+                            }
+                        } else if *e == "0_bytes_read".to_owned() {
+                            //0 bytes in the buffer
+                        } else {
+                            panic!("{}", e);
+                        }
+                    }
+                    Ok(x) => {
+                        for pair in pairs.iter_mut() {
+                            if pair.id == x.0 {
+                                println!("{}", pair.id);
+                                pair.bid_price = x.1;
+                                pair.offer_price = x.2;
                             }
                         }
                     }
                 }
-                for pair in pairs.iter() {
-                    file.write(
-                        format!("{} {} {}\n", pair.name, pair.bid_price, pair.offer_price)
-                            .as_bytes(),
-                    )
-                    .expect("Unable to write file");
-                }
+            } else {
+                instant = Instant::now();
+
                 counter += 1;
                 if counter >= 15 {
+                    println!("Sent heartbeat");
                     if tls_client_price.heartbeat(&constructer, "QUOTE")
                         == "connection_aborted".to_owned()
                     {
@@ -564,6 +559,14 @@ fn data() {
                         }
                     }
                     counter = 0;
+                }
+
+                for pair in pairs.iter() {
+                    file.write(
+                        format!("{} {} {}\n", pair.name, pair.bid_price, pair.offer_price)
+                            .as_bytes(),
+                    )
+                    .expect("Unable to write file");
                 }
             }
         }
