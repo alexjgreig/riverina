@@ -1,10 +1,11 @@
 use crate::forex::CurrencyPair;
 
-//TODO: Write co-integration algorithm to find the 'correlation' of the forex pairs, and create a
-//portfolio using this. Then
-
-// Finds the co-integration value of two forex pairs given a certain time series of data. Used to
-// find possible correlation between the two data sets.
+// TODO: Using co-integration and possibly PCA analysis or something with added complexity
+// construct a portfolio of forex pairs. Model the mean reversion process using gaussian state
+// space and use this to maximise the profit when there is divergence
+// (https://arxiv.org/pdf/0808.1710.pdf)
+//
+// TODO: Have to write a time series unit root test.
 fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) -> f64 {
     return 0.00;
 }
@@ -18,7 +19,7 @@ pub fn pairs_coint(pairs: &Vec<CurrencyPair>) {
     }
 }
 
-pub fn linear_regression(values: Vec<f64>, regression_size: usize) -> (f64, f64) {
+pub fn ols(values: Vec<f64>, regression_size: usize) -> (f64, f64) {
     // Length of previous values vector is less than the desired population_size then push offer
     // price.
     let mut x_sum: f64 = 0.00;
@@ -70,8 +71,8 @@ pub fn pair_linear_regression(pair: &mut CurrencyPair, regression_size: usize) -
         pair.pv.push(pair.bid_price);
         return 0;
     } else {
-        let base = linear_regression(pair.pv.clone(), regression_size);
-        let signal = linear_regression(pair.pv.clone(), regression_size / 2);
+        let base = ols(pair.pv.clone(), regression_size);
+        let signal = ols(pair.pv.clone(), regression_size / 2);
 
         pair.b_b0 = base.0;
         pair.b_b1 = base.1;
