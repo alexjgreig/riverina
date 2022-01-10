@@ -541,7 +541,6 @@ fn data() {
 
                 counter += 1;
                 if counter >= 15 {
-                    println!("Sent heartbeat");
                     if tls_client_price.heartbeat(&constructer, "QUOTE")
                         == "connection_aborted".to_owned()
                     {

@@ -41,7 +41,7 @@ impl TlsClient {
         let dns_name = webpki::DNSNameRef::try_from_ascii_str(host).unwrap();
         let socket = TcpStream::connect((host, port)).unwrap();
         socket
-            .set_read_timeout(Some(Duration::from_millis(1100)))
+            .set_read_timeout(Some(Duration::from_millis(1500)))
             .unwrap();
         let tls_session = rustls::ClientSession::new(&Arc::new(config), dns_name);
 
