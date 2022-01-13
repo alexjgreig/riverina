@@ -57,10 +57,14 @@ impl TlsClient {
         }
     }
 
+    //Using buffer sizes of 30kB to make sure that any message can be read fully, as if all
+    //instruments return a message in one stream reading of 500 bytes, the message can be read
+    //fully without partiality.
+
     pub fn logon(&mut self, constructer: &MessageConstructer, qualifier: &str) -> String {
         // self.flush().unwrap();
         self.message_sequence_number = 1;
-        let mut buffer = [0u8; 4096];
+        let mut buffer = [0u8; 30720];
         self.write(constructer.logon(qualifier, 1, 60, true).as_bytes())
             .unwrap();
         match self.read(&mut buffer) {
@@ -90,8 +94,8 @@ impl TlsClient {
         constructer: &MessageConstructer,
         mdr_id: &str,
         symbol: u32,
-    ) -> Result<(u32, f64, f64), String> {
-        let mut buffer = [0u8; 4096];
+    ) -> Result<String, String> {
+        let mut buffer = [0u8; 30720];
         self.write(
             constructer
                 .market_data_request(
@@ -134,19 +138,14 @@ impl TlsClient {
                     } else if parsed_message == "heartbeat".to_owned() {
                         return Err(parsed_message);
                     } else {
-                        let res = parsed_message.split(',').collect::<Vec<_>>();
-                        return Ok((
-                            res[0].parse::<u32>().unwrap(),
-                            res[1].parse::<f64>().unwrap(),
-                            res[2].parse::<f64>().unwrap(),
-                        ));
+                        return Ok(String::from("Success"));
                     }
                 }
             }
         }
     }
-    pub fn market_data_update(&mut self) -> Result<(u32, f64, f64), String> {
-        let mut buffer = [0u8; 4096];
+    pub fn market_data_update(&mut self) -> Result<Vec<(u32, f64, f64)>, String> {
+        let mut buffer = [0u8; 30720];
         match self.read(&mut buffer) {
             Err(e) => {
                 if e.kind() == io::ErrorKind::ConnectionReset
@@ -175,12 +174,20 @@ impl TlsClient {
                     } else if parsed_message == "heartbeat".to_owned() {
                         return Err(parsed_message);
                     } else {
-                        let res = parsed_message.split(',').collect::<Vec<_>>();
-                        return Ok((
-                            res[0].parse::<u32>().unwrap(),
-                            res[1].parse::<f64>().unwrap(),
-                            res[2].parse::<f64>().unwrap(),
-                        ));
+                        let msgs: Vec<&str> =
+                            parsed_message.split("\u{0001}").collect::<Vec<&str>>();
+                        let mut instruments: Vec<(u32, f64, f64)> = Vec::new();
+
+                        for msg in msgs {
+                            let res = msg.split(',').collect::<Vec<_>>();
+                            instruments.push((
+                                res[0].parse::<u32>().unwrap(),
+                                res[1].parse::<f64>().unwrap(),
+                                res[2].parse::<f64>().unwrap(),
+                            ));
+                        }
+
+                        return Ok(instruments);
                     }
                 }
             }
@@ -195,7 +202,7 @@ impl TlsClient {
         order_quantity: u64,
         position_id: Option<String>,
     ) -> Result<String, String> {
-        let mut buffer = [0u8; 4096];
+        let mut buffer = [0u8; 30720];
         let utc_time = Utc::now().format("%Y%m%d-%H:%M:%S").to_string();
         match position_id {
             None => {
@@ -263,7 +270,7 @@ impl TlsClient {
     }
 
     pub fn logout(&mut self, constructer: &MessageConstructer, qualifier: &str) -> String {
-        let mut buffer = [0u8; 4096];
+        let mut buffer = [0u8; 30720];
         self.write(
             constructer
                 .logout(qualifier, self.message_sequence_number)

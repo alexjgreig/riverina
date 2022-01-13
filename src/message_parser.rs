@@ -1,19 +1,42 @@
-pub fn parse_fix_message(msg: String) -> Result<String, String> {
-    if msg.contains("35=A") {
-        return parse_logon(msg);
-    } else if msg.contains("35=5") {
-        return parse_logout(msg);
-    } else if msg.contains("35=W") || msg.contains("35=3") {
-        return parse_market_request(msg);
-    } else if msg.contains("35=1") {
-        return Ok("test_request".to_owned());
-    } else if msg.contains("35=0") {
-        return Ok("heartbeat".to_owned());
-    } else if msg.contains("35=8") || msg.contains("35=j") {
-        return parse_order_request(msg);
-    } else {
-        return Err(format!("Could not parse fix message: Message {}", msg));
+pub fn parse_fix_message(data: String) -> Result<String, String> {
+    let mut input = data.clone();
+    let mut fix_msgs: Vec<String> = Vec::new();
+    let mut offset: usize = 0;
+    loop {
+        // 7 due to the offset between checksum and end of msg.
+        let offset = match input.find("10=") {
+            Some(x) => x,
+            None => break,
+        };
+        fix_msgs.push(input.drain(..(offset + 7)).collect());
     }
+
+    let mut prices: String = String::new();
+
+    for msg in fix_msgs {
+        if msg.contains("35=A") {
+            return parse_logon(msg);
+        } else if msg.contains("35=5") {
+            return parse_logout(msg);
+        } else if msg.contains("35=W") {
+            if prices.len() != 0 {
+                prices = format!("{}\u{0001}{}", prices, parse_market_request(msg).unwrap());
+            } else {
+                prices = parse_market_request(msg).unwrap();
+            }
+        } else if msg.contains("35=3") {
+            return parse_market_request(msg);
+        } else if msg.contains("35=1") {
+            return Ok("test_request".to_owned());
+        } else if msg.contains("35=0") {
+            return Ok("heartbeat".to_owned());
+        } else if msg.contains("35=8") || msg.contains("35=j") {
+            return parse_order_request(msg);
+        } else {
+            return Err(format!("Could not parse fix message: {}", msg));
+        }
+    }
+    return Ok(prices);
 }
 fn parse_logon(msg: String) -> Result<String, String> {
     let tags: Vec<&str> = msg.split("\u{0001}").collect::<Vec<&str>>();

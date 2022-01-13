@@ -1,3 +1,6 @@
+//TODO: Make the defaults None instead of 0 as this could cause random buy and sells at the start
+//as the program thinks that the price is zero at the beginning that way the program waits until a
+//previous price is not None.
 use std::fmt;
 pub struct CurrencyPair<'a> {
     pub bid_price: f64,

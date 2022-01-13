@@ -448,12 +448,9 @@ fn data() {
     println!("{}", tls_client_price.logon(&constructer, "QUOTE"));
 
     for pair in pairs.iter_mut() {
-        let prices = tls_client_price
+        tls_client_price
             .market_data_request_establishment(&constructer, pair.name, pair.id)
             .unwrap();
-
-        pair.bid_price = prices.1;
-        pair.offer_price = prices.2;
     }
 
     let mut counter = 0;
@@ -486,12 +483,9 @@ fn data() {
                 tls_client_price = TlsClient::new(host, price_port);
                 tls_client_price.logon(&constructer, "QUOTE");
                 for pair in pairs.iter_mut() {
-                    let prices = tls_client_price
+                    tls_client_price
                         .market_data_request_establishment(&constructer, pair.name, pair.id)
                         .unwrap();
-
-                    pair.bid_price = prices.1;
-                    pair.offer_price = prices.2;
                 }
                 connected = true;
                 println!("Market Started, Connected to Exchange");
@@ -510,16 +504,13 @@ fn data() {
                             tls_client_price = TlsClient::new(host, price_port);
                             tls_client_price.logon(&constructer, "QUOTE");
                             for pair in pairs.iter_mut() {
-                                let prices = tls_client_price
+                                tls_client_price
                                     .market_data_request_establishment(
                                         &constructer,
                                         pair.name,
                                         pair.id,
                                     )
                                     .unwrap();
-
-                                pair.bid_price = prices.1;
-                                pair.offer_price = prices.2;
                             }
                         } else if *e == "0_bytes_read".to_owned() {
                             //0 bytes in the buffer
@@ -527,11 +518,13 @@ fn data() {
                             panic!("{}", e);
                         }
                     }
-                    Ok(x) => {
-                        for pair in pairs.iter_mut() {
-                            if pair.id == x.0 {
-                                pair.bid_price = x.1;
-                                pair.offer_price = x.2;
+                    Ok(instruments) => {
+                        for instra in instruments {
+                            for pair in pairs.iter_mut() {
+                                if pair.id == instra.0 {
+                                    pair.bid_price = instra.1;
+                                    pair.offer_price = instra.2;
+                                }
                             }
                         }
                     }
@@ -548,12 +541,9 @@ fn data() {
                         tls_client_price = TlsClient::new(host, price_port);
                         tls_client_price.logon(&constructer, "QUOTE");
                         for pair in pairs.iter_mut() {
-                            let prices = tls_client_price
+                            tls_client_price
                                 .market_data_request_establishment(&constructer, pair.name, pair.id)
                                 .unwrap();
-
-                            pair.bid_price = prices.1;
-                            pair.offer_price = prices.2;
                         }
                     }
                     counter = 0;
