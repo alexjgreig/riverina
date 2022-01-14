@@ -1,14 +1,13 @@
 pub fn parse_fix_message(data: String) -> Result<String, String> {
     let mut input = data.clone();
     let mut fix_msgs: Vec<String> = Vec::new();
-    let mut offset: usize = 0;
     loop {
-        // 7 due to the offset between checksum and end of msg.
-        let offset = match input.find("10=") {
+        // 8 due to the offset between checksum and end of msg.
+        let offset = match input.find("\u{0001}10=") {
             Some(x) => x,
             None => break,
         };
-        fix_msgs.push(input.drain(..(offset + 7)).collect());
+        fix_msgs.push(input.drain(..(offset + 8)).collect());
     }
 
     let mut prices: String = String::new();
