@@ -10,6 +10,8 @@ pub fn parse_fix_message(data: String) -> Result<String, String> {
         fix_msgs.push(input.drain(..(offset + 8)).collect());
     }
 
+    println!("{:?}", fix_msgs);
+
     let mut prices: String = String::new();
 
     for msg in fix_msgs {
