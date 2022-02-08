@@ -72,8 +72,11 @@ impl TlsClient {
             Ok(_) => {
                 return format!(
                     "{}",
-                    message_parser::parse_fix_message(from_utf8(&mut buffer).unwrap().to_string())
-                        .unwrap()
+                    message_parser::parse_fix_message(
+                        String::new(),
+                        from_utf8(&mut buffer).unwrap().to_string()
+                    )
+                    .unwrap()
                 )
             }
         };
@@ -130,6 +133,7 @@ impl TlsClient {
                     return Err("0_bytes_read".to_owned());
                 } else {
                     let parsed_message = message_parser::parse_fix_message(
+                        String::new(),
                         from_utf8(&mut buffer).unwrap().to_string(),
                     )
                     .unwrap();
@@ -144,7 +148,10 @@ impl TlsClient {
             }
         }
     }
-    pub fn market_data_update(&mut self) -> Result<Vec<(u32, f64, f64)>, String> {
+    pub fn market_data_update(
+        &mut self,
+        prev_partial: String,
+    ) -> Result<(Vec<(u32, f64, f64)>, String), String> {
         let mut buffer = [0u8; 30720];
         match self.read(&mut buffer) {
             Err(e) => {
@@ -165,7 +172,8 @@ impl TlsClient {
                 if x == 0 {
                     return Err("0_bytes_read".to_owned());
                 } else {
-                    let parsed_message = message_parser::parse_fix_message(
+                    let mut parsed_message = message_parser::parse_fix_message(
+                        prev_partial,
                         from_utf8(&mut buffer).unwrap().to_string(),
                     )
                     .unwrap();
@@ -174,6 +182,11 @@ impl TlsClient {
                     } else if parsed_message == "heartbeat".to_owned() {
                         return Err(parsed_message);
                     } else {
+                        let prev_partial = parsed_message
+                            .drain(..parsed_message.find('\u{0003}').unwrap())
+                            .collect();
+                        //removes the divider used to delinate the prev_partial from the prices.
+                        parsed_message.remove(0);
                         let msgs: Vec<&str> =
                             parsed_message.split("\u{0001}").collect::<Vec<&str>>();
                         let mut instruments: Vec<(u32, f64, f64)> = Vec::new();
@@ -187,7 +200,7 @@ impl TlsClient {
                             ));
                         }
 
-                        return Ok(instruments);
+                        return Ok((instruments, prev_partial));
                     }
                 }
             }
@@ -255,6 +268,7 @@ impl TlsClient {
                     return Err("0_bytes_read".to_owned());
                 } else {
                     let parsed_message = message_parser::parse_fix_message(
+                        String::new(),
                         from_utf8(&mut buffer).unwrap().to_string(),
                     );
                     match parsed_message {
@@ -282,8 +296,11 @@ impl TlsClient {
             Ok(_) => {
                 return format!(
                     "{}",
-                    message_parser::parse_fix_message(from_utf8(&mut buffer).unwrap().to_string())
-                        .unwrap()
+                    message_parser::parse_fix_message(
+                        String::new(),
+                        from_utf8(&mut buffer).unwrap().to_string()
+                    )
+                    .unwrap()
                 );
             }
         }

@@ -1,5 +1,8 @@
-pub fn parse_fix_message(data: String) -> Result<String, String> {
-    let mut input = data.clone();
+//Prev partial is the end of a message that has been cut off due to the buffer size limit being
+//reached, this only happens if transmission between the server and the client is lost momentarily
+//and the messages fill the buffer size or if the messages are held and then dumped.
+pub fn parse_fix_message(prev_partial: String, data: String) -> Result<String, String> {
+    let mut input = format!("{}{}", prev_partial, data);
     let mut fix_msgs: Vec<String> = Vec::new();
     loop {
         // 8 due to the offset between checksum and end of msg.
@@ -37,7 +40,7 @@ pub fn parse_fix_message(data: String) -> Result<String, String> {
             return Err(format!("Could not parse fix message: {}", msg));
         }
     }
-    return Ok(prices);
+    return Ok(format!("{}\u{0003}{}", input, prices));
 }
 fn parse_logon(msg: String) -> Result<String, String> {
     let tags: Vec<&str> = msg.split("\u{0001}").collect::<Vec<&str>>();

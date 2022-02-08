@@ -464,6 +464,8 @@ fn data() {
         .open("hist_s.txt")
         .unwrap();
 
+    let mut prev_partial = String::new();
+
     loop {
         if (Utc::now().weekday() == Weekday::Fri
             && Utc::now().hour() == 21
@@ -491,7 +493,7 @@ fn data() {
                 println!("Market Started, Connected to Exchange");
             }
             if instant.elapsed() < Duration::from_millis(1000) {
-                match &mut tls_client_price.market_data_update() {
+                match &mut tls_client_price.market_data_update(prev_partial.clone()) {
                     Err(e) => {
                         if *e == "test_request".to_owned() {
                             tls_client_price.heartbeat(&constructer, "QUOTE");
@@ -519,7 +521,8 @@ fn data() {
                         }
                     }
                     Ok(instruments) => {
-                        for instra in instruments {
+                        prev_partial = instruments.1.clone();
+                        for instra in instruments.0.clone() {
                             for pair in pairs.iter_mut() {
                                 if pair.id == instra.0 {
                                     pair.bid_price = instra.1;
