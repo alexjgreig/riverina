@@ -40,6 +40,8 @@ pub fn parse_fix_message(prev_partial: String, data: String) -> Result<String, S
             return Err(format!("Could not parse fix message: {}", msg));
         }
     }
+    // Remove empty bytes from buffer.
+    input.drain(input.find("\u{0000}").unwrap()..);
     return Ok(format!("{}\u{0003}{}", input, prices));
 }
 fn parse_logon(msg: String) -> Result<String, String> {
