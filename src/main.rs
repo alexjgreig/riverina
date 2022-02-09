@@ -3,11 +3,6 @@
 // Attempting to exploit the inefficency's of the market for profit, i.e the prices oscillating
 // around a mean / objective price enables reversions to the mean to be targeted.
 //TODO: Look into sharpe ration and see the draw down, e.g. in the backtest
-//TODO: Could try to implement a mean reversion strategy and momentum together to get the best of
-//both worlds.
-//TODO: Volitility could be added to strengthen the algorithm, ATR and realised volitality
-//TODO: Look into Markov Chains / Hidden Markov Models / Markov regime switching models and
-//possible incorporate ideas of stochastics into the decision making process.
 
 mod algorithm;
 mod forex;
