@@ -6,7 +6,27 @@ use crate::forex::CurrencyPair;
 // (https://arxiv.org/pdf/0808.1710.pdf)
 //
 // TODO: Have to write a time series unit root test.
+fn adf(b: f64, a: f64, se: f64) -> bool {
+    //return bool deciding whether time-series is stationary.
+    // Need to calculate the t value then find the p value which is tested agains the dicky fuller
+    // disribution. https://www.youtube.com/watch?v=1opjnegd_hA
+
+    return false;
+}
 fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) -> f64 {
+    // Three return values are the two residuals and the standard error
+    let ols_p: (f64, f64, f64) = ols(pair1);
+    let ols_s: (f64, f64, f64) = ols(pair2);
+
+    if (adf(ols_p.0, ols_p.1, ols_p.2) == true) || (adf(ols_s.0, ols_s.1, ols_s.2) == true) {
+        // Either is stationary therefore not I(1) time series.
+        return 0.0;
+    }
+    let fdif: Vec<f64> = Vec::new();
+    for i in 0..pair1.pv.len() {
+        fdif.push(pair1.pv[i] - pair2.pv[i])
+    }
+    let ols_dif: (f64, f64, f64) = ols(fdif);
     return 0.00;
 }
 
@@ -19,9 +39,9 @@ pub fn pairs_coint(pairs: &Vec<CurrencyPair>) {
     }
 }
 
-pub fn ols(values: Vec<f64>, regression_size: usize) -> (f64, f64) {
-    // Length of previous values vector is less than the desired population_size then push offer
-    // price.
+pub fn ols(values: Vec<f64>) -> (f64, f64, f64) {
+    //Finds residuals and standard error of simple linear regression.
+
     let mut x_sum: f64 = 0.00;
     let mut x_c: f64 = 0.00;
     let mut y_sum: f64 = 0.00;
@@ -39,8 +59,8 @@ pub fn ols(values: Vec<f64>, regression_size: usize) -> (f64, f64) {
         y_c = (y_t - y_sum) - y_y;
         y_sum = y_t;
     }
-    let x_mean: f64 = x_sum / regression_size as f64;
-    let y_mean: f64 = y_sum / regression_size as f64;
+    let x_mean: f64 = x_sum / values.len() as f64;
+    let y_mean: f64 = y_sum / values.len() as f64;
 
     let mut sumx_dif2: f64 = 0.00;
     let mut sumy_dif2: f64 = 0.00;
@@ -50,18 +70,21 @@ pub fn ols(values: Vec<f64>, regression_size: usize) -> (f64, f64) {
         sumy_dif2 += (value - y_mean).powf(2.0);
     }
 
-    let s_x: f64 = (1.0 / (regression_size as f64 - 1.0) * sumx_dif2).sqrt();
-    let s_y: f64 = (1.0 / (regression_size as f64 - 1.0) * sumy_dif2).sqrt();
+    let s_x: f64 = (1.0 / (values.len() as f64 - 1.0) * sumx_dif2).sqrt();
+    let s_y: f64 = (1.0 / (values.len() as f64 - 1.0) * sumy_dif2).sqrt();
 
     let mut r: f64 = 0.00;
     for (index, value) in values.iter().enumerate() {
         r += ((index as f64 - x_mean) / s_x) * ((value - y_mean) / s_y);
     }
-    r = r * 1.0 / (regression_size as f64 - 1.0);
+    // Pearson's correlation coefficient
+    r = r * 1.0 / (values.len() as f64 - 1.0);
     let b1 = r * (s_y / s_x);
     let b0 = y_mean - b1 * x_mean;
+    // Sample standard error
+    let se = s_y / values.len().sqrt();
 
-    return (b0, b1);
+    return (b0, b1, se);
 }
 
 pub fn pair_linear_regression(pair: &mut CurrencyPair, regression_size: usize) -> u8 {
