@@ -16,8 +16,15 @@ fn adf(b: f64, a: f64, se: f64) -> bool {
 
         H1: β < 0 (false)
     */
+
     let t_stat = b / se;
-    let p_stat = return false;
+    let critical_value = -3.54;
+
+    if t_stat < critical_value {
+        return false;
+    } else {
+        return true;
+    }
 }
 fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) -> f64 {
     // Three return values are the two residuals and the standard error
