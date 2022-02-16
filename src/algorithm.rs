@@ -6,17 +6,36 @@ use crate::forex::CurrencyPair;
 // (https://arxiv.org/pdf/0808.1710.pdf)
 //
 // TODO: Have to write a time series unit root test.
+//TODO: Need to find the first difference of the prices.
 fn adf(b: f64, a: f64, se: f64) -> bool {
     //return bool deciding whether time-series is stationary.
-    // Need to calculate the t value then find the p value which is tested agains the dicky fuller
-    // disribution. https://www.youtube.com/watch?v=1opjnegd_hA
+    // Need to calculate the t value then find the p value which is tested agains the dicky fuller.
+    // The hypotheses of the test are below:
+    /*
+        H0: β = 0 (true)
 
-    return false;
+        H1: β < 0 (false)
+    */
+    let t_stat = b / se;
+    let p_stat = return false;
 }
 fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) -> f64 {
     // Three return values are the two residuals and the standard error
-    let ols_p: (f64, f64, f64) = ols(pair1);
-    let ols_s: (f64, f64, f64) = ols(pair2);
+    //Delta of values; first difference needs to be performed for all values.
+    let dvalues_p: Vec<f64> = Vec::new();
+
+    for i in 0..pair1.len() - 1 {
+        dvalues_p[i] = pair1[i + 1] - pair1[i];
+    }
+
+    let dvalues_s: Vec<f64> = Vec::new();
+
+    for i in 0..pair2.len() - 1 {
+        dvalues_s[i] = pair2[i + 1] - pair2[i];
+    }
+
+    let ols_p: (f64, f64, f64) = ols(dvalues_p);
+    let ols_s: (f64, f64, f64) = ols(dvalues_s);
 
     if (adf(ols_p.0, ols_p.1, ols_p.2) == true) || (adf(ols_s.0, ols_s.1, ols_s.2) == true) {
         // Either is stationary therefore not I(1) time series.
