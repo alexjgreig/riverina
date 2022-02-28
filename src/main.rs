@@ -3,6 +3,8 @@
 // Attempting to exploit the inefficency's of the market for profit, i.e the prices oscillating
 // around a mean / objective price enables reversions to the mean to be targeted.
 //TODO: Look into sharpe ration and see the draw down, e.g. in the backtest
+//TODO: Do cointegration tests when the market is closed and update the cointegrating pairs list.
+//Continuously store past prices.
 
 mod algorithm;
 mod forex;

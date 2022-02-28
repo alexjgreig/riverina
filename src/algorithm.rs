@@ -31,6 +31,8 @@ fn cointegration(pair1: &CurrencyPair, pair2: &CurrencyPair) -> f64 {
     //Delta of values; first difference needs to be performed for all values.
     let dvalues_p: Vec<f64> = Vec::new();
 
+    //TODO: Check if this should be the absolute value of the difference or if a negative
+    //difference is required.
     for i in 0..pair1.len() - 1 {
         dvalues_p[i] = pair1[i + 1] - pair1[i];
     }
