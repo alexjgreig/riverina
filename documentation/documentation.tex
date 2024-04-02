@@ -44,7 +44,7 @@
 \vspace{6cm}
 % Adding sections...
 \section{References / Websites}
-Currently, I am trying to build a pairs trading algorithm for stocks that I can trade. I am hoping to target illiquid stocks since I hope I might have some edge there as a small player, but the data looks hard to find, so I will test on liquids for now. Currently, there are X stages to it and I will walk you through the plan.
+Interesting methodolgy for pair trading. Attempts to find principle factors that are statistically significant for clustering timeseries, then builds a portfolio of mean reverting pairs to trade. Regime environments as a indicator for success is interesting, implied correlation as a measure will provide some indication of the dispersion of the portfolio, removing unwanteded predictability in the time series would also help remove trend-like behaviour of the pairs. 
 
 1: Data - So far I have gotten 10 years of 1-minute data to work with for 378 S\&P500 stocks, but for practical purposes, I have decided to use 5-minute bars because Jupyter uses about 6GB of RAM when I open with 5-minute bars. Fundamental data as well as news data to be incorporated later. Hopefully, I can use some volatility risk premium and implied correlation data to backtest over different regime periods.
 
@@ -59,8 +59,6 @@ Currently, I am trying to build a pairs trading algorithm for stocks that I can 
 6: Trading the spread - Simio uses ARMA + LSTM after it crosses a standard deviation boundary, but I think that a SARIMAX model is more appropriate and that meta-labeling needs to occur for deep learning to be applicable. The data is too few and noisy for an LSTM to do well so I will be feeding it a collection of pre-existing alpha signals, TA-lib indicators, and using a Shumway Stoffer Smoother to attempt to remove noise from the data. I felt that Kalman smooths too much. Removing noise with wavelets and autoencoders is still on the table I will have to see. I also would like to make the standard deviation trigger relative to the volume.
 
 7: Regime Change - This is something considered both in the backtesting part (not my idea and currently working on how to implement), and also afterwards with Ernest Chan's Conditional Parameter Optimization method that should be based on fundamental data, auto-correlation levels over timeframes, the VRP, and implied correlation. Still a WIP
-
-I will keep you updated when I get finished. If anyone has suggestions please share!
 
 References:
 
